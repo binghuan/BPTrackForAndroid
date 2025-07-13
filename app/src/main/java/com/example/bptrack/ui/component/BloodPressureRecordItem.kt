@@ -10,9 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.bptrack.R
 import com.example.bptrack.data.entity.BloodPressureRecord
+import com.example.bptrack.ui.theme.BPTrackAndroidTheme
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,6 +141,63 @@ fun BloodPressureRecordItem(
                     Text(stringResource(R.string.cancel))
                 }
             }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BloodPressureRecordItemPreview() {
+    BPTrackAndroidTheme {
+        BloodPressureRecordItem(
+            record = BloodPressureRecord(
+                id = 1,
+                systolic = 120,
+                diastolic = 80,
+                heartRate = 75,
+                dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
+                notes = "早晨測量，感覺良好"
+            ),
+            onEdit = {},
+            onDelete = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BloodPressureRecordItemNoHeartRatePreview() {
+    BPTrackAndroidTheme {
+        BloodPressureRecordItem(
+            record = BloodPressureRecord(
+                id = 2,
+                systolic = 135,
+                diastolic = 85,
+                heartRate = null,
+                dateTime = LocalDateTime.of(2024, 1, 15, 18, 45),
+                notes = null
+            ),
+            onEdit = {},
+            onDelete = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BloodPressureRecordItemHighBPPreview() {
+    BPTrackAndroidTheme {
+        BloodPressureRecordItem(
+            record = BloodPressureRecord(
+                id = 3,
+                systolic = 150,
+                diastolic = 95,
+                heartRate = 88,
+                dateTime = LocalDateTime.of(2024, 1, 15, 21, 15),
+                notes = "運動後測量"
+            ),
+            onEdit = {},
+            onDelete = {}
         )
     }
 } 

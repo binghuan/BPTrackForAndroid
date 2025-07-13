@@ -1,33 +1,21 @@
 package com.example.bptrack.ui.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.bptrack.R
 import com.example.bptrack.ui.state.BloodPressureState
+import com.example.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -144,5 +132,53 @@ fun AddRecordDialog(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddRecordDialogPreview() {
+    BPTrackAndroidTheme {
+        AddRecordDialog(
+            state = BloodPressureState(
+                systolicInput = "120",
+                diastolicInput = "80",
+                heartRateInput = "75",
+                notesInput = "早晨測量",
+                selectedDateTime = LocalDateTime.now(),
+                isAddDialogVisible = true
+            ),
+            onSave = {},
+            onCancel = {},
+            onSystolicChange = {},
+            onDiastolicChange = {},
+            onHeartRateChange = {},
+            onNotesChange = {},
+            onDateTimeChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddRecordDialogEmptyPreview() {
+    BPTrackAndroidTheme {
+        AddRecordDialog(
+            state = BloodPressureState(
+                systolicInput = "",
+                diastolicInput = "",
+                heartRateInput = "",
+                notesInput = "",
+                selectedDateTime = LocalDateTime.now(),
+                isAddDialogVisible = true
+            ),
+            onSave = {},
+            onCancel = {},
+            onSystolicChange = {},
+            onDiastolicChange = {},
+            onHeartRateChange = {},
+            onNotesChange = {},
+            onDateTimeChange = {}
+        )
     }
 } 
