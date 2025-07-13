@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,14 +21,41 @@ import com.example.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+// 血壓趨勢枚舉
+enum class BloodPressureTrend {
+    INCREASED,    // 上升
+    DECREASED,    // 下降
+    STABLE,       // 穩定
+    FIRST_RECORD  // 首次記錄
+}
+
+// 計算血壓趋势
+fun calculateBloodPressureTrend(
+    current: BloodPressureRecord,
+    previous: BloodPressureRecord?
+): BloodPressureTrend {
+    if (previous == null) return BloodPressureTrend.FIRST_RECORD
+    
+    val currentAvg = (current.systolic + current.diastolic) / 2.0
+    val previousAvg = (previous.systolic + previous.diastolic) / 2.0
+    
+    return when {
+        currentAvg > previousAvg + 2 -> BloodPressureTrend.INCREASED
+        currentAvg < previousAvg - 2 -> BloodPressureTrend.DECREASED
+        else -> BloodPressureTrend.STABLE
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BloodPressureRecordItem(
     record: BloodPressureRecord,
+    previousRecord: BloodPressureRecord? = null,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val trend = calculateBloodPressureTrend(record, previousRecord)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -44,7 +74,7 @@ fun BloodPressureRecordItem(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    // 血壓值
+                    // 血壓值和趨勢
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -59,6 +89,57 @@ fun BloodPressureRecordItem(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        
+                        // 趨勢指示器
+                        when (trend) {
+                            BloodPressureTrend.INCREASED -> {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowUp,
+                                        contentDescription = "上升",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "上升",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Red
+                                    )
+                                }
+                            }
+                            BloodPressureTrend.DECREASED -> {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "下降",
+                                        tint = Color.Green,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "下降",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Green
+                                    )
+                                }
+                            }
+                            BloodPressureTrend.STABLE -> {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "穩定",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            BloodPressureTrend.FIRST_RECORD -> {
+                                // 首次記錄不顯示趨勢
+                            }
+                        }
                     }
 
                     // 心率
@@ -166,16 +247,24 @@ fun BloodPressureRecordItemPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun BloodPressureRecordItemNoHeartRatePreview() {
+fun BloodPressureRecordItemWithTrendPreview() {
     BPTrackAndroidTheme {
         BloodPressureRecordItem(
             record = BloodPressureRecord(
                 id = 2,
                 systolic = 135,
                 diastolic = 85,
-                heartRate = null,
+                heartRate = 80,
                 dateTime = LocalDateTime.of(2024, 1, 15, 18, 45),
-                notes = null
+                notes = "下午測量"
+            ),
+            previousRecord = BloodPressureRecord(
+                id = 1,
+                systolic = 120,
+                diastolic = 80,
+                heartRate = 75,
+                dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
+                notes = "早晨測量"
             ),
             onEdit = {},
             onDelete = {}
@@ -185,16 +274,51 @@ fun BloodPressureRecordItemNoHeartRatePreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun BloodPressureRecordItemHighBPPreview() {
+fun BloodPressureRecordItemDecreasedTrendPreview() {
     BPTrackAndroidTheme {
         BloodPressureRecordItem(
             record = BloodPressureRecord(
-                id = 3,
-                systolic = 150,
-                diastolic = 95,
-                heartRate = 88,
-                dateTime = LocalDateTime.of(2024, 1, 15, 21, 15),
-                notes = "運動後測量"
+                id = 2,
+                systolic = 115,
+                diastolic = 75,
+                heartRate = 70,
+                dateTime = LocalDateTime.of(2024, 1, 15, 18, 45),
+                notes = "下午測量，感覺不錯"
+            ),
+            previousRecord = BloodPressureRecord(
+                id = 1,
+                systolic = 130,
+                diastolic = 85,
+                heartRate = 80,
+                dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
+                notes = "早晨測量"
+            ),
+            onEdit = {},
+            onDelete = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BloodPressureRecordItemStableTrendPreview() {
+    BPTrackAndroidTheme {
+        BloodPressureRecordItem(
+            record = BloodPressureRecord(
+                id = 2,
+                systolic = 121,
+                diastolic = 81,
+                heartRate = 76,
+                dateTime = LocalDateTime.of(2024, 1, 15, 18, 45),
+                notes = "下午測量"
+            ),
+            previousRecord = BloodPressureRecord(
+                id = 1,
+                systolic = 120,
+                diastolic = 80,
+                heartRate = 75,
+                dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
+                notes = "早晨測量"
             ),
             onEdit = {},
             onDelete = {}

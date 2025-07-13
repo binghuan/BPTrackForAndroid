@@ -3,6 +3,7 @@ package com.example.bptrack.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -112,9 +113,10 @@ fun BloodPressureScreenContent(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(state.records) { record ->
+                    itemsIndexed(state.records) { index, record ->
                         BloodPressureRecordItem(
                             record = record,
+                            previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
                             onEdit = { onEditRecord(record) },
                             onDelete = { onDeleteRecord(record) }
                         )
@@ -203,28 +205,28 @@ fun BloodPressureScreenWithRecordsPreview() {
             state = BloodPressureState(
                 records = listOf(
                     BloodPressureRecord(
-                        id = 1,
-                        systolic = 120,
-                        diastolic = 80,
-                        heartRate = 75,
-                        dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
-                        notes = "早晨測量"
+                        id = 3,
+                        systolic = 115,
+                        diastolic = 75,
+                        heartRate = 70,
+                        dateTime = LocalDateTime.of(2024, 1, 16, 9, 30),
+                        notes = "早晨測量，感覺良好"
                     ),
                     BloodPressureRecord(
                         id = 2,
                         systolic = 135,
                         diastolic = 85,
-                        heartRate = null,
+                        heartRate = 80,
                         dateTime = LocalDateTime.of(2024, 1, 15, 18, 45),
-                        notes = null
+                        notes = "下午測量"
                     ),
                     BloodPressureRecord(
-                        id = 3,
-                        systolic = 150,
-                        diastolic = 95,
-                        heartRate = 88,
-                        dateTime = LocalDateTime.of(2024, 1, 15, 21, 15),
-                        notes = "運動後測量，血壓偏高"
+                        id = 1,
+                        systolic = 120,
+                        diastolic = 80,
+                        heartRate = 75,
+                        dateTime = LocalDateTime.of(2024, 1, 15, 9, 30),
+                        notes = "首次測量"
                     )
                 ),
                 isLoading = false
