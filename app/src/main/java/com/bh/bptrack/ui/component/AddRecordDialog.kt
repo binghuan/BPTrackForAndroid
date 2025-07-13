@@ -1,6 +1,9 @@
 package com.bh.bptrack.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +26,8 @@ import com.bh.bptrack.data.entity.BloodPressureRecord
 import com.bh.bptrack.ui.state.BloodPressureState
 import com.bh.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 // 血壓分類枚舉
@@ -76,6 +81,108 @@ fun AddRecordDialog(
     val isSystolicValid = systolicValue != null && systolicValue > 0
     val isDiastolicValid = diastolicValue != null && diastolicValue > 0
     val showCategory = isSystolicValid && isDiastolicValid
+
+    // DatePicker 和 TimePicker 狀態
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    
+    // DatePicker 狀態
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = state.selectedDateTime
+            .atZone(java.time.ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    )
+    
+    // TimePicker 狀態
+    val timePickerState = rememberTimePickerState(
+        initialHour = state.selectedDateTime.hour,
+        initialMinute = state.selectedDateTime.minute
+    )
+
+    // DatePicker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                            val newDateTime = LocalDateTime.of(
+                                selectedDate,
+                                state.selectedDateTime.toLocalTime()
+                            )
+                            onDateTimeChange(newDateTime)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // TimePicker Dialog
+    if (showTimePicker) {
+        Dialog(onDismissRequest = { showTimePicker = false }) {
+            Card(
+                modifier = Modifier.padding(16.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.select_time),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    TimePicker(state = timePickerState)
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showTimePicker = false }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(
+                            onClick = {
+                                val selectedTime = LocalTime.of(
+                                    timePickerState.hour,
+                                    timePickerState.minute
+                                )
+                                val newDateTime = LocalDateTime.of(
+                                    state.selectedDateTime.toLocalDate(),
+                                    selectedTime
+                                )
+                                onDateTimeChange(newDateTime)
+                                showTimePicker = false
+                            }
+                        ) {
+                            Text(stringResource(R.string.save))
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Dialog(onDismissRequest = onCancel) {
         Card(
@@ -187,20 +294,48 @@ fun AddRecordDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // 日期選擇器
+                    val dateInteractionSource = remember { MutableInteractionSource() }
+                    
+                    LaunchedEffect(dateInteractionSource) {
+                        dateInteractionSource.interactions.collect { interaction ->
+                            when (interaction) {
+                                is PressInteraction.Press -> {
+                                    showDatePicker = true
+                                }
+                            }
+                        }
+                    }
+                    
                     OutlinedTextField(
                         value = state.selectedDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
                         onValueChange = { },
                         label = { Text(stringResource(R.string.date)) },
                         readOnly = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        interactionSource = dateInteractionSource
                     )
+
+                    // 時間選擇器
+                    val timeInteractionSource = remember { MutableInteractionSource() }
+                    
+                    LaunchedEffect(timeInteractionSource) {
+                        timeInteractionSource.interactions.collect { interaction ->
+                            when (interaction) {
+                                is PressInteraction.Press -> {
+                                    showTimePicker = true
+                                }
+                            }
+                        }
+                    }
 
                     OutlinedTextField(
                         value = state.selectedDateTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                         onValueChange = { },
                         label = { Text(stringResource(R.string.time)) },
                         readOnly = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        interactionSource = timeInteractionSource
                     )
                 }
 
