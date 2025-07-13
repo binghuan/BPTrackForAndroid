@@ -100,6 +100,14 @@ sealed class BloodPressureIntent {
     data class UpdateHeartRate(val value: String) : BloodPressureIntent()
     data class UpdateNotes(val value: String) : BloodPressureIntent()
     data class UpdateDateTime(val dateTime: LocalDateTime) : BloodPressureIntent()
+    
+    // CSV 匯入匯出
+    object ExportToCsv : BloodPressureIntent()
+    object ImportFromCsv : BloodPressureIntent()
+    data class ProcessCsvImport(val csvContent: String) : BloodPressureIntent()
+    
+    // 檢視模式切換
+    data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
 }
 ```
 
@@ -108,6 +116,12 @@ sealed class BloodPressureIntent {
 ### 2. BloodPressureState (UI狀態)
 
 ```kotlin
+// 檢視模式枚舉
+enum class ViewMode {
+    DETAILED,  // 詳細檢視（原本的卡片模式）
+    COMPACT    // 簡潔檢視（條列模式）
+}
+
 data class BloodPressureState(
     val records: List<BloodPressureRecord> = emptyList(),
     val isLoading: Boolean = false,
@@ -117,6 +131,15 @@ data class BloodPressureState(
     val systolicInput: String = "",
     val diastolicInput: String = "",
     // ... 其他狀態
+    
+    // CSV 匯入匯出狀態
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false,
+    val csvExportData: String? = null,
+    val importProgress: String? = null,
+    
+    // 檢視模式
+    val viewMode: ViewMode = ViewMode.DETAILED
 )
 ```
 
@@ -576,6 +599,222 @@ Text(
 1. **創建Screen組件**: 新的Composable函數
 2. **定義導航**: 配置Navigation路由
 3. **狀態管理**: 考慮是否需要新的ViewModel
+
+## 📋 雙檢視模式實現
+
+### 檢視模式架構
+
+#### ViewMode 枚舉定義
+```kotlin
+enum class ViewMode {
+    DETAILED,  // 詳細檢視（完整卡片模式）
+    COMPACT    // 簡潔檢視（條列模式）
+}
+```
+
+#### 狀態管理
+```kotlin
+// BloodPressureState.kt 中添加檢視模式狀態
+val viewMode: ViewMode = ViewMode.DETAILED
+
+// BloodPressureIntent.kt 中添加切換意圖
+data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
+```
+
+#### UI 組件實現
+```kotlin
+// BloodPressureRecordItemCompact.kt - 簡潔檢視組件
+@Composable
+fun BloodPressureRecordItemCompact(
+    record: BloodPressureRecord,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // 日期時間 (wrap content)
+            Text(
+                text = record.dateTime.format(DateTimeFormatter.ofPattern("MM/dd HH:mm")),
+                maxLines = 1
+            )
+            
+            // 血壓值 (weight = 1, 居中)
+            Text(
+                text = "${record.systolic}/${record.diastolic}",
+                modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.headlineSmall
+            )
+            
+            // 脈搏和選單
+            Row {
+                Text(text = record.heartRate?.toString() ?: "-")
+                // 選單按鈕
+            }
+        }
+    }
+}
+```
+
+#### 動態佈局切換
+```kotlin
+// BloodPressureScreen.kt 中的條件渲染
+LazyColumn(
+    verticalArrangement = Arrangement.spacedBy(
+        if (state.viewMode == ViewMode.COMPACT) 4.dp else 8.dp
+    )
+) {
+    itemsIndexed(state.records) { index, record ->
+        when (state.viewMode) {
+            ViewMode.COMPACT -> {
+                BloodPressureRecordItemCompact(
+                    record = record,
+                    onEdit = { onEditRecord(record) },
+                    onDelete = { onDeleteRecord(record) }
+                )
+            }
+            ViewMode.DETAILED -> {
+                BloodPressureRecordItem(
+                    record = record,
+                    previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
+                    onEdit = { onEditRecord(record) },
+                    onDelete = { onDeleteRecord(record) }
+                )
+            }
+        }
+    }
+}
+```
+
+## 📤📥 CSV 數據管理系統
+
+### 核心工具類：CsvUtils
+
+#### CSV 匯出功能
+```kotlin
+object CsvUtils {
+    private const val CSV_HEADER = "Date,Systolic,Diastolic,Heartbeat,Notes"
+    
+    fun exportToCsv(records: List<BloodPressureRecord>): String {
+        val writer = StringWriter()
+        writer.appendLine(CSV_HEADER)
+        
+        records.forEach { record ->
+            val dateStr = record.dateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+            val heartbeat = record.heartRate ?: ""
+            val notes = record.notes?.replace(",", "，") ?: ""
+            
+            writer.appendLine("$dateStr,${record.systolic},${record.diastolic},$heartbeat,$notes")
+        }
+        
+        return writer.toString()
+    }
+}
+```
+
+#### CSV 匯入功能
+```kotlin
+fun importFromCsv(csvContent: String): Result<List<BloodPressureRecord>> {
+    return try {
+        // 清理CSV內容，移除BOM和特殊字符
+        val cleanedContent = csvContent
+            .replace("\uFEFF", "")  // 移除BOM
+            .replace("__", "")       // 移除多餘下劃線
+            .replace("_", "")        // 移除單個下劃線
+            .trim()
+        
+        val lines = cleanedContent.lines()
+        val records = mutableListOf<BloodPressureRecord>()
+        val errors = mutableListOf<String>()
+        
+        lines.drop(1).forEachIndexed { index, line ->
+            val cleanedLine = line.trim()
+            // 跳過空行和只有逗號的行
+            if (cleanedLine.isNotEmpty() && !cleanedLine.matches(Regex("^,*$"))) {
+                parseCsvLine(cleanedLine, index + 2).fold(
+                    onSuccess = { record -> records.add(record) },
+                    onFailure = { error -> errors.add("第 ${index + 2} 行: ${error.message}") }
+                )
+            }
+        }
+        
+        if (errors.isNotEmpty()) {
+            Result.failure(Exception("解析錯誤:\n${errors.joinToString("\n")}"))
+        } else {
+            Result.success(records)
+        }
+    } catch (e: Exception) {
+        Result.failure(Exception("CSV 解析失敗: ${e.message}"))
+    }
+}
+```
+
+#### 智能去重邏輯
+```kotlin
+// Repository 中的匯入處理
+suspend fun importFromCsv(csvContent: String): Result<Int> {
+    return try {
+        val parseResult = CsvUtils.importFromCsv(csvContent)
+        val newRecords = parseResult.getOrThrow()
+        val existingRecords = dao.getAllRecordsSync()
+        
+        // 找出需要覆蓋的記錄（相同日期）
+        val recordsToDelete = mutableListOf<BloodPressureRecord>()
+        newRecords.forEach { newRecord ->
+            existingRecords.forEach { existingRecord ->
+                if (CsvUtils.isSameDate(newRecord, existingRecord)) {
+                    recordsToDelete.add(existingRecord)
+                }
+            }
+        }
+        
+        // 刪除相同日期的舊記錄，插入新記錄
+        recordsToDelete.forEach { dao.deleteRecord(it) }
+        dao.insertRecords(newRecords)
+        
+        Result.success(newRecords.size)
+    } catch (e: Exception) {
+        Result.failure(Exception("匯入失敗: ${e.message}"))
+    }
+}
+```
+
+### 文件處理整合
+
+#### MainActivity 整合
+```kotlin
+class MainActivity : ComponentActivity() {
+    private val csvImportLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { processSelectedCsvFile(it) }
+    }
+    
+    private fun processSelectedCsvFile(uri: Uri) {
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            val csvContent = inputStream.bufferedReader().use { it.readText() }
+            viewModel.handleIntent(BloodPressureIntent.ProcessCsvImport(csvContent))
+        }
+    }
+    
+    private fun shareCsvFile(csvContent: String) {
+        val fileName = "blood_pressure_records_${
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+        }.csv"
+        
+        val file = File(cacheDir, fileName)
+        file.writeText(csvContent)
+        
+        val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        
+        startActivity(Intent.createChooser(shareIntent, "分享血壓記錄"))
+    }
+}
+```
 
 ## 🧪 測試策略
 

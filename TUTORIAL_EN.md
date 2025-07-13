@@ -100,6 +100,14 @@ sealed class BloodPressureIntent {
     data class UpdateHeartRate(val value: String) : BloodPressureIntent()
     data class UpdateNotes(val value: String) : BloodPressureIntent()
     data class UpdateDateTime(val dateTime: LocalDateTime) : BloodPressureIntent()
+    
+    // CSV Import/Export
+    object ExportToCsv : BloodPressureIntent()
+    object ImportFromCsv : BloodPressureIntent()
+    data class ProcessCsvImport(val csvContent: String) : BloodPressureIntent()
+    
+    // View Mode Toggle
+    data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
 }
 ```
 
@@ -108,6 +116,12 @@ sealed class BloodPressureIntent {
 ### 2. BloodPressureState (UI State)
 
 ```kotlin
+// View Mode Enum
+enum class ViewMode {
+    DETAILED,  // Detailed view (original card mode)
+    COMPACT    // Compact view (list mode)
+}
+
 data class BloodPressureState(
     val records: List<BloodPressureRecord> = emptyList(),
     val isLoading: Boolean = false,
@@ -117,6 +131,15 @@ data class BloodPressureState(
     val systolicInput: String = "",
     val diastolicInput: String = "",
     // ... other states
+    
+    // CSV Import/Export States
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false,
+    val csvExportData: String? = null,
+    val importProgress: String? = null,
+    
+    // View Mode
+    val viewMode: ViewMode = ViewMode.DETAILED
 )
 ```
 
@@ -577,6 +600,222 @@ Text(
 2. **Define Navigation**: Configure Navigation routes
 3. **State Management**: Consider if new ViewModel is needed
 
+## 📋 Dual View Mode Implementation
+
+### View Mode Architecture
+
+#### ViewMode Enum Definition
+```kotlin
+enum class ViewMode {
+    DETAILED,  // Detailed view (complete card mode)
+    COMPACT    // Compact view (list mode)
+}
+```
+
+#### State Management
+```kotlin
+// Add view mode state in BloodPressureState.kt
+val viewMode: ViewMode = ViewMode.DETAILED
+
+// Add toggle intent in BloodPressureIntent.kt
+data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
+```
+
+#### UI Component Implementation
+```kotlin
+// BloodPressureRecordItemCompact.kt - Compact view component
+@Composable
+fun BloodPressureRecordItemCompact(
+    record: BloodPressureRecord,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Date time (wrap content)
+            Text(
+                text = record.dateTime.format(DateTimeFormatter.ofPattern("MM/dd HH:mm")),
+                maxLines = 1
+            )
+            
+            // Blood pressure value (weight = 1, centered)
+            Text(
+                text = "${record.systolic}/${record.diastolic}",
+                modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.headlineSmall
+            )
+            
+            // Heart rate and menu
+            Row {
+                Text(text = record.heartRate?.toString() ?: "-")
+                // Menu button
+            }
+        }
+    }
+}
+```
+
+#### Dynamic Layout Switching
+```kotlin
+// Conditional rendering in BloodPressureScreen.kt
+LazyColumn(
+    verticalArrangement = Arrangement.spacedBy(
+        if (state.viewMode == ViewMode.COMPACT) 4.dp else 8.dp
+    )
+) {
+    itemsIndexed(state.records) { index, record ->
+        when (state.viewMode) {
+            ViewMode.COMPACT -> {
+                BloodPressureRecordItemCompact(
+                    record = record,
+                    onEdit = { onEditRecord(record) },
+                    onDelete = { onDeleteRecord(record) }
+                )
+            }
+            ViewMode.DETAILED -> {
+                BloodPressureRecordItem(
+                    record = record,
+                    previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
+                    onEdit = { onEditRecord(record) },
+                    onDelete = { onDeleteRecord(record) }
+                )
+            }
+        }
+    }
+}
+```
+
+## 📤📥 CSV Data Management System
+
+### Core Utility Class: CsvUtils
+
+#### CSV Export Function
+```kotlin
+object CsvUtils {
+    private const val CSV_HEADER = "Date,Systolic,Diastolic,Heartbeat,Notes"
+    
+    fun exportToCsv(records: List<BloodPressureRecord>): String {
+        val writer = StringWriter()
+        writer.appendLine(CSV_HEADER)
+        
+        records.forEach { record ->
+            val dateStr = record.dateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+            val heartbeat = record.heartRate ?: ""
+            val notes = record.notes?.replace(",", "，") ?: ""
+            
+            writer.appendLine("$dateStr,${record.systolic},${record.diastolic},$heartbeat,$notes")
+        }
+        
+        return writer.toString()
+    }
+}
+```
+
+#### CSV Import Function
+```kotlin
+fun importFromCsv(csvContent: String): Result<List<BloodPressureRecord>> {
+    return try {
+        // Clean CSV content, remove BOM and special characters
+        val cleanedContent = csvContent
+            .replace("\uFEFF", "")  // Remove BOM
+            .replace("__", "")       // Remove extra underscores
+            .replace("_", "")        // Remove single underscores
+            .trim()
+        
+        val lines = cleanedContent.lines()
+        val records = mutableListOf<BloodPressureRecord>()
+        val errors = mutableListOf<String>()
+        
+        lines.drop(1).forEachIndexed { index, line ->
+            val cleanedLine = line.trim()
+            // Skip empty lines and comma-only lines
+            if (cleanedLine.isNotEmpty() && !cleanedLine.matches(Regex("^,*$"))) {
+                parseCsvLine(cleanedLine, index + 2).fold(
+                    onSuccess = { record -> records.add(record) },
+                    onFailure = { error -> errors.add("Line ${index + 2}: ${error.message}") }
+                )
+            }
+        }
+        
+        if (errors.isNotEmpty()) {
+            Result.failure(Exception("Parse errors:\n${errors.joinToString("\n")}"))
+        } else {
+            Result.success(records)
+        }
+    } catch (e: Exception) {
+        Result.failure(Exception("CSV parsing failed: ${e.message}"))
+    }
+}
+```
+
+#### Smart Deduplication Logic
+```kotlin
+// Import handling in Repository
+suspend fun importFromCsv(csvContent: String): Result<Int> {
+    return try {
+        val parseResult = CsvUtils.importFromCsv(csvContent)
+        val newRecords = parseResult.getOrThrow()
+        val existingRecords = dao.getAllRecordsSync()
+        
+        // Find records to overwrite (same date)
+        val recordsToDelete = mutableListOf<BloodPressureRecord>()
+        newRecords.forEach { newRecord ->
+            existingRecords.forEach { existingRecord ->
+                if (CsvUtils.isSameDate(newRecord, existingRecord)) {
+                    recordsToDelete.add(existingRecord)
+                }
+            }
+        }
+        
+        // Delete old records with same date, insert new records
+        recordsToDelete.forEach { dao.deleteRecord(it) }
+        dao.insertRecords(newRecords)
+        
+        Result.success(newRecords.size)
+    } catch (e: Exception) {
+        Result.failure(Exception("Import failed: ${e.message}"))
+    }
+}
+```
+
+### File Handling Integration
+
+#### MainActivity Integration
+```kotlin
+class MainActivity : ComponentActivity() {
+    private val csvImportLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { processSelectedCsvFile(it) }
+    }
+    
+    private fun processSelectedCsvFile(uri: Uri) {
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            val csvContent = inputStream.bufferedReader().use { it.readText() }
+            viewModel.handleIntent(BloodPressureIntent.ProcessCsvImport(csvContent))
+        }
+    }
+    
+    private fun shareCsvFile(csvContent: String) {
+        val fileName = "blood_pressure_records_${
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+        }.csv"
+        
+        val file = File(cacheDir, fileName)
+        file.writeText(csvContent)
+        
+        val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        
+        startActivity(Intent.createChooser(shareIntent, "Share Blood Pressure Records"))
+    }
+}
+```
+
 ## 🧪 Testing Strategy
 
 ### Unit Tests
@@ -599,10 +838,18 @@ Text(
 4. **Internationalization**: Complete multi-language support, adapting to different regional user needs
 5. **User Experience**: Material Design 3 design, providing intuitive and easy-to-use interface
 
+### ✅ Recent Implemented Features
+
+- **CSV Data Management**: Complete CSV import/export functionality with smart deduplication
+- **Dual View Mode**: Detailed and compact view modes for different usage scenarios
+- **Enhanced User Experience**: One-click view mode switching and improved file handling
+
 ### 📈 Future Extension Directions
 
-- **Data Export**: Support CSV, PDF format export
-- **Chart Analysis**: Add blood pressure trend charts
+- **Chart Analysis**: Add blood pressure trend charts and statistical visualization
+- **PDF Export**: Generate professional medical reports
+- **Cloud Sync**: Backup and sync data across devices
+- **Health Insights**: AI-powered health trend analysis
 - **Reminder System**: Scheduled measurement reminder functionality
 - **Cloud Sync**: Data backup and synchronization functionality
 - **Health Recommendations**: AI-based personalized health recommendations
