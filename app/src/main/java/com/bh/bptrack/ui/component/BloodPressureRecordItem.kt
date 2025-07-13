@@ -114,9 +114,9 @@ fun BloodPressureRecordItemCompact(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 左側：日期時間 (wrap content)
+            // 左側：日期 (wrap content) - 顯示年月日
             Text(
-                text = record.dateTime.format(DateTimeFormatter.ofPattern("MM/dd HH:mm")),
+                text = record.dateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,

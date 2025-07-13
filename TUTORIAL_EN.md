@@ -632,9 +632,9 @@ fun BloodPressureRecordItemCompact(
 ) {
     Card {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Date time (wrap content)
+            // Date (wrap content) - Display year/month/day
             Text(
-                text = record.dateTime.format(DateTimeFormatter.ofPattern("MM/dd HH:mm")),
+                text = record.dateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
                 maxLines = 1
             )
             
