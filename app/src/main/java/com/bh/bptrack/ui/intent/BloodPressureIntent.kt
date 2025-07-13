@@ -1,6 +1,6 @@
-package com.example.bptrack.ui.intent
+package com.bh.bptrack.ui.intent
 
-import com.example.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.data.entity.BloodPressureRecord
 import java.time.LocalDateTime
 
 sealed class BloodPressureIntent {

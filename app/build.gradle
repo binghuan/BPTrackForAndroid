@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.bptrack'
+    namespace 'com.bh.bptrack'
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.example.bptrack"
+        applicationId "com.bh.bptrack"
         minSdk 26
         targetSdk 34
         versionCode 202570130

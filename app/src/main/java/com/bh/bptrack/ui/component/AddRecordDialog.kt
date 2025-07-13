@@ -1,4 +1,4 @@
-package com.example.bptrack.ui.component
+package com.bh.bptrack.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,10 +18,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.bptrack.R
-import com.example.bptrack.data.entity.BloodPressureRecord
-import com.example.bptrack.ui.state.BloodPressureState
-import com.example.bptrack.ui.theme.BPTrackAndroidTheme
+import com.bh.bptrack.R
+import com.bh.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.ui.state.BloodPressureState
+import com.bh.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

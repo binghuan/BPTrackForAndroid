@@ -1,4 +1,4 @@
-package com.example.bptrack.data.entity
+package com.bh.bptrack.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

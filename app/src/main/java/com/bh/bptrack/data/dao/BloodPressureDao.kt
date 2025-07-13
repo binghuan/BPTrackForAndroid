@@ -1,7 +1,7 @@
-package com.example.bptrack.data.dao
+package com.bh.bptrack.data.dao
 
 import androidx.room.*
-import com.example.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.data.entity.BloodPressureRecord
 import kotlinx.coroutines.flow.Flow
 
 @Dao

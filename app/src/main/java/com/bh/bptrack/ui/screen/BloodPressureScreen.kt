@@ -1,4 +1,4 @@
-package com.example.bptrack.ui.screen
+package com.bh.bptrack.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,15 +14,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.bptrack.R
-import com.example.bptrack.data.entity.BloodPressureRecord
-import com.example.bptrack.ui.component.BloodPressureRecordItem
-import com.example.bptrack.ui.component.AddRecordDialog
-import com.example.bptrack.ui.intent.BloodPressureIntent
-import com.example.bptrack.ui.state.BloodPressureState
-import com.example.bptrack.ui.theme.BPTrackAndroidTheme
-import com.example.bptrack.ui.viewmodel.BloodPressureViewModel
-import com.example.bptrack.ui.viewmodel.BloodPressureViewModelFactory
+import com.bh.bptrack.R
+import com.bh.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.ui.component.BloodPressureRecordItem
+import com.bh.bptrack.ui.component.AddRecordDialog
+import com.bh.bptrack.ui.intent.BloodPressureIntent
+import com.bh.bptrack.ui.state.BloodPressureState
+import com.bh.bptrack.ui.theme.BPTrackAndroidTheme
+import com.bh.bptrack.ui.viewmodel.BloodPressureViewModel
+import com.bh.bptrack.ui.viewmodel.BloodPressureViewModelFactory
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)

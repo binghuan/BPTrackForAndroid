@@ -1,7 +1,7 @@
-package com.example.bptrack.data.repository
+package com.bh.bptrack.data.repository
 
-import com.example.bptrack.data.dao.BloodPressureDao
-import com.example.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.data.dao.BloodPressureDao
+import com.bh.bptrack.data.entity.BloodPressureRecord
 import kotlinx.coroutines.flow.Flow
 
 class BloodPressureRepository(private val dao: BloodPressureDao) {

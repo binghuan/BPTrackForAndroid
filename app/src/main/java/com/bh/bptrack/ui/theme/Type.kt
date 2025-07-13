@@ -1,4 +1,4 @@
-package com.example.bptrack.ui.theme
+package com.bh.bptrack.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

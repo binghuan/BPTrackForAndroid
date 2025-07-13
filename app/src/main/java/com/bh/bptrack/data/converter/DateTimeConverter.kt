@@ -1,4 +1,4 @@
-package com.example.bptrack.data.converter
+package com.bh.bptrack.data.converter
 
 import androidx.room.TypeConverter
 import java.time.LocalDateTime

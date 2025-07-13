@@ -1,4 +1,4 @@
-package com.example.bptrack
+package com.bh.bptrack
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,12 +8,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.bptrack.data.database.BloodPressureDatabase
-import com.example.bptrack.data.repository.BloodPressureRepository
-import com.example.bptrack.ui.screen.BloodPressureScreen
-import com.example.bptrack.ui.theme.BPTrackAndroidTheme
-import com.example.bptrack.ui.viewmodel.BloodPressureViewModel
-import com.example.bptrack.ui.viewmodel.BloodPressureViewModelFactory
+import com.bh.bptrack.data.database.BloodPressureDatabase
+import com.bh.bptrack.data.repository.BloodPressureRepository
+import com.bh.bptrack.ui.screen.BloodPressureScreen
+import com.bh.bptrack.ui.theme.BPTrackAndroidTheme
+import com.bh.bptrack.ui.viewmodel.BloodPressureViewModel
+import com.bh.bptrack.ui.viewmodel.BloodPressureViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

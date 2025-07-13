@@ -1,13 +1,13 @@
-package com.example.bptrack.data.database
+package com.bh.bptrack.data.database
 
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import android.content.Context
-import com.example.bptrack.data.converter.DateTimeConverter
-import com.example.bptrack.data.dao.BloodPressureDao
-import com.example.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.data.converter.DateTimeConverter
+import com.bh.bptrack.data.dao.BloodPressureDao
+import com.bh.bptrack.data.entity.BloodPressureRecord
 
 @Database(
     entities = [BloodPressureRecord::class],

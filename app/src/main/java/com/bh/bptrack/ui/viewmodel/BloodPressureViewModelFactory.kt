@@ -1,8 +1,8 @@
-package com.example.bptrack.ui.viewmodel
+package com.bh.bptrack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.bptrack.data.repository.BloodPressureRepository
+import com.bh.bptrack.data.repository.BloodPressureRepository
 
 class BloodPressureViewModelFactory(
     private val repository: BloodPressureRepository

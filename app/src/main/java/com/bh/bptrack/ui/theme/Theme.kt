@@ -1,4 +1,4 @@
-package com.example.bptrack.ui.theme
+package com.bh.bptrack.ui.theme
 
 import android.app.Activity
 import android.os.Build

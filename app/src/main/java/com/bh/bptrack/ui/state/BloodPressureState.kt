@@ -1,6 +1,6 @@
-package com.example.bptrack.ui.state
+package com.bh.bptrack.ui.state
 
-import com.example.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.data.entity.BloodPressureRecord
 
 data class BloodPressureState(
     val records: List<BloodPressureRecord> = emptyList(),
