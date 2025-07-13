@@ -9,11 +9,13 @@
 - **狀態管理**: 集中式狀態管理，UI狀態一致性
 - **可測試性**: 各層職責明確，便於單元測試
 - **可維護性**: 代碼結構清晰，易於擴展和修改
+- **主題適配**: 支持Dark/Light模式，動態顏色切換
+- **國際化**: 完整的雙語支持，易於擴展其他語言
 
 ## 📁 項目結構
 
 ```
-app/src/main/java/com/example/bptrack/
+app/src/main/java/com/bh/bptrack/
 ├── MainActivity.kt                 # 應用入口點
 ├── data/                          # 數據層
 │   ├── entity/                    # 數據實體
@@ -314,6 +316,12 @@ sequenceDiagram
 - **Repository Pattern**: 數據訪問抽象
 - **Entity**: 數據模型
 
+### **UI與主題**
+- **Material Design 3**: 現代化UI設計語言
+- **Dark/Light Theme**: 主題適配系統
+- **Dynamic Colors**: 動態顏色管理
+- **Internationalization**: 國際化支持
+
 ### **依賴注入**
 - **手動DI**: ViewModelFactory模式
 
@@ -323,6 +331,7 @@ sequenceDiagram
 - 自動分析血壓等級（正常、升高、高血壓1期等）
 - 實時顏色反饋提示
 - 符合醫學標準的分類
+- 主題適配顏色顯示
 
 ### 2. **趨勢分析**
 - 自動比較與上次測量的變化
@@ -338,6 +347,8 @@ sequenceDiagram
 - Material Design 3設計語言
 - 響應式布局設計
 - 平滑的動畫效果
+- Dark/Light主題支持
+- 動態顏色適配
 
 ## ⚡ 關鍵特性深入解析
 
@@ -346,13 +357,13 @@ sequenceDiagram
 血壓分類基於美國心臟協會(AHA)標準：
 
 ```kotlin
-// BloodPressureCategory枚舉
-enum class BloodPressureCategory(
+// BPCategory枚舉
+enum class BPCategory(
     val nameRes: Int,
     val color: Color,
     val descriptionRes: Int
 ) {
-    NORMAL(R.string.bp_category_normal, Color(0xFF4CAF50), R.string.bp_category_normal_desc),
+    NORMAL(R.string.bp_category_normal, Color(0xFF2E7D32), R.string.bp_category_normal_desc),
     ELEVATED(R.string.bp_category_elevated, Color(0xFFFF9800), R.string.bp_category_elevated_desc),
     HIGH_STAGE_1(R.string.bp_category_high_stage_1, Color(0xFFFF5722), R.string.bp_category_high_stage_1_desc),
     HIGH_STAGE_2(R.string.bp_category_high_stage_2, Color(0xFFD32F2F), R.string.bp_category_high_stage_2_desc),
@@ -360,14 +371,14 @@ enum class BloodPressureCategory(
 }
 
 // 分類計算邏輯
-fun calculateBloodPressureCategory(systolic: Int?, diastolic: Int?): BloodPressureCategory {
+fun calculateBPCategory(systolic: Int, diastolic: Int): BPCategory {
     return when {
-        systolic >= 180 || diastolic >= 120 -> BloodPressureCategory.HYPERTENSIVE_CRISIS
-        systolic >= 140 || diastolic >= 90 -> BloodPressureCategory.HIGH_STAGE_2
-        systolic >= 130 || diastolic >= 80 -> BloodPressureCategory.HIGH_STAGE_1
-        systolic >= 120 && diastolic < 80 -> BloodPressureCategory.ELEVATED
-        systolic < 120 && diastolic < 80 -> BloodPressureCategory.NORMAL
-        else -> BloodPressureCategory.HIGH_STAGE_1
+        systolic >= 180 || diastolic >= 120 -> BPCategory.HYPERTENSIVE_CRISIS
+        systolic >= 140 || diastolic >= 90 -> BPCategory.HIGH_STAGE_2
+        systolic >= 130 || diastolic >= 80 -> BPCategory.HIGH_STAGE_1
+        systolic >= 120 && diastolic < 80 -> BPCategory.ELEVATED
+        systolic < 120 && diastolic < 80 -> BPCategory.NORMAL
+        else -> BPCategory.HIGH_STAGE_1
     }
 }
 ```
@@ -392,7 +403,53 @@ fun calculateBloodPressureTrend(
 }
 ```
 
-### 3. **錯誤處理機制**
+### 3. **主題適配系統**
+
+應用支持Dark/Light模式，確保在不同主題下都有良好的視覺體驗：
+
+```kotlin
+// 主題檢測和顏色適配
+@Composable
+fun getBPCategoryTextColor(
+    category: BPCategory,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+): Color {
+    return when (category) {
+        BPCategory.NORMAL -> if (isDarkTheme) Color(0xFF66BB6A) else Color(0xFF1B5E20)
+        BPCategory.ELEVATED -> if (isDarkTheme) Color(0xFFFFB74D) else Color(0xFFE65100)
+        BPCategory.HIGH_STAGE_1 -> if (isDarkTheme) Color(0xFFFF8A65) else Color(0xFFBF360C)
+        BPCategory.HIGH_STAGE_2 -> if (isDarkTheme) Color(0xFFEF5350) else Color(0xFF8B0000)
+        BPCategory.HYPERTENSIVE_CRISIS -> if (isDarkTheme) Color(0xFFAD1457) else Color(0xFF4A0E4E)
+    }
+}
+
+// 在UI組件中使用
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = getBPCategoryTextColor(bpCategory),
+    style = MaterialTheme.typography.bodySmall
+)
+```
+
+**主題適配原則：**
+- **Dark模式**: 使用亮色系文字，確保在深色背景下清晰可見
+- **Light模式**: 使用暗色系文字，提供良好的對比度
+- **動態切換**: 根據系統主題自動調整，無需手動切換
+
+### 4. **國際化支持**
+
+應用支持Traditional Chinese和English雙語：
+
+```kotlin
+// 字符串資源組織
+res/values/strings.xml        # 中文（默認）
+res/values-en/strings.xml     # 英文
+
+// 使用方式
+stringResource(R.string.bp_category_normal)
+```
+
+### 5. **錯誤處理機制**
 
 ```kotlin
 // ViewModel中的統一錯誤處理
@@ -445,11 +502,73 @@ Text(stringResource(R.string.blood_pressure_records))
 Text("血壓記錄")
 ```
 
+### 4. **主題適配**
+```kotlin
+// ✅ 好的做法：使用主題適配函數
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = getBPCategoryTextColor(bpCategory)
+)
+
+// ❌ 避免：硬編碼顏色
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = Color.Red
+)
+```
+
+### 5. **國際化支持**
+```kotlin
+// ✅ 好的做法：所有文字都使用字符串資源
+enum class BPCategory(
+    val nameRes: Int,
+    val descriptionRes: Int
+) {
+    NORMAL(R.string.bp_category_normal, R.string.bp_category_normal_desc)
+}
+
+// ❌ 避免：混合使用硬編碼和資源
+enum class BPCategory(
+    val name: String,
+    val nameRes: Int
+) {
+    NORMAL("Normal", R.string.bp_category_normal)
+}
+```
+
 ## 🔄 擴展指南
 
 ### 添加新功能
 1. **定義新的Intent**: 在 `BloodPressureIntent` 中添加新操作
 2. **更新State**: 在 `BloodPressureState` 中添加必要狀態
+
+### 擴展主題適配
+要為新的UI組件添加主題適配支持：
+
+```kotlin
+// 1. 創建主題適配函數
+@Composable
+fun getCustomTextColor(
+    type: CustomType,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+): Color {
+    return when (type) {
+        CustomType.PRIMARY -> if (isDarkTheme) Color.White else Color.Black
+        CustomType.SECONDARY -> if (isDarkTheme) Color.Gray else Color.DarkGray
+    }
+}
+
+// 2. 在UI組件中使用
+Text(
+    text = "Custom Text",
+    color = getCustomTextColor(CustomType.PRIMARY)
+)
+```
+
+### 添加新語言支持
+1. **創建新的字符串資源文件**: `res/values-zh/strings.xml`
+2. **翻譯所有字符串**: 確保所有字符串都有對應翻譯
+3. **測試語言切換**: 在不同語言環境下測試應用
 3. **實現邏輯**: 在 `ViewModel` 中處理新Intent
 4. **更新UI**: 在相應組件中響應狀態變化
 
