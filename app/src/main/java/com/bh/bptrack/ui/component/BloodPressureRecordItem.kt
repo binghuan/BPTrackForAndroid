@@ -1,6 +1,7 @@
 package com.bh.bptrack.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -70,6 +71,21 @@ fun calculateBloodPressureTrend(
         currentAvg > previousAvg + 2 -> BloodPressureTrend.INCREASED
         currentAvg < previousAvg - 2 -> BloodPressureTrend.DECREASED
         else -> BloodPressureTrend.STABLE
+    }
+}
+
+// 根據主題模式取得血壓分類的文字顏色
+@Composable
+fun getBPCategoryTextColor(
+    category: BPCategory,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+): Color {
+    return when (category) {
+        BPCategory.NORMAL -> if (isDarkTheme) Color(0xFF66BB6A) else Color(0xFF1B5E20)
+        BPCategory.ELEVATED -> if (isDarkTheme) Color(0xFFFFB74D) else Color(0xFFE65100)
+        BPCategory.HIGH_STAGE_1 -> if (isDarkTheme) Color(0xFFFF8A65) else Color(0xFFBF360C)
+        BPCategory.HIGH_STAGE_2 -> if (isDarkTheme) Color(0xFFEF5350) else Color(0xFF8B0000)
+        BPCategory.HYPERTENSIVE_CRISIS -> if (isDarkTheme) Color(0xFFAD1457) else Color(0xFF4A0E4E)
     }
 }
 
@@ -187,7 +203,7 @@ fun BloodPressureRecordItem(
                         Text(
                             text = stringResource(bpCategory.nameRes),
                             style = MaterialTheme.typography.bodySmall,
-                            color = bpCategory.color,
+                            color = getBPCategoryTextColor(bpCategory),
                             fontWeight = FontWeight.Medium
                         )
                     }
