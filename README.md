@@ -26,14 +26,8 @@
 ## 應用界面預覽
 
 <div align="center">
-  <img src="README/demo.png" alt="應用演示" width="300">
-</div>
-
-### 檢視模式對比
-
-<div align="center">
-  <img src="README/demo_view_mode.jpg" alt="檢視模式切換" width="300">
   <img src="README/demo_compact_mode.jpg" alt="簡潔檢視模式" width="300">
+  <img src="README/demo_view_mode.jpg" alt="檢視模式切換" width="300">
 </div>
 
 *左圖：檢視模式切換按鈕，右圖：簡潔檢視模式 - 更多記錄，更少空間*
