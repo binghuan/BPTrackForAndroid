@@ -1,5 +1,9 @@
 # 血壓記錄 APP
 
+<div align="center">
+  <img src="README/icon-256.png" alt="應用圖標" width="150" height="150">
+</div>
+
 這是一個使用 Android Jetpack Compose、Room Database 和 MVI 架構模式開發的血壓記錄應用程序。
 
 ## 主要功能
@@ -11,6 +15,12 @@
 - ✏️ 編輯已有記錄
 - 🗑️ 刪除記錄
 - 📱 現代化的 Material Design UI
+
+## 應用界面預覽
+
+<div align="center">
+  <img src="README/demo.png" alt="應用演示" width="300">
+</div>
 
 ## 技術架構
 
