@@ -210,7 +210,7 @@ fun AddRecordDialog(
                     onValueChange = onNotesChange,
                     label = { Text(stringResource(R.string.notes)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
+                    minLines = 1,
                     maxLines = 5
                 )
 
