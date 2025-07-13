@@ -29,7 +29,7 @@ enum class BPCategory(
     val color: Color,
     val descriptionRes: Int
 ) {
-    NORMAL(R.string.bp_category_normal, Color(0xFF4CAF50), R.string.bp_category_normal_desc),
+    NORMAL(R.string.bp_category_normal, Color(0xFF2E7D32), R.string.bp_category_normal_desc),
     ELEVATED(R.string.bp_category_elevated, Color(0xFFFF9800), R.string.bp_category_elevated_desc),
     HIGH_STAGE_1(R.string.bp_category_high_stage_1, Color(0xFFFF5722), R.string.bp_category_high_stage_1_desc),
     HIGH_STAGE_2(R.string.bp_category_high_stage_2, Color(0xFFD32F2F), R.string.bp_category_high_stage_2_desc),
@@ -146,13 +146,13 @@ fun BloodPressureRecordItem(
                                     Icon(
                                         Icons.Default.KeyboardArrowDown,
                                         contentDescription = stringResource(R.string.trend_decreased),
-                                        tint = Color.Green,
+                                        tint = Color(0xFF2E7D32),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
                                         text = stringResource(R.string.trend_decreased),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Green
+                                        color = Color(0xFF2E7D32)
                                     )
                                 }
                             }
