@@ -18,9 +18,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bh.bptrack.R
 import com.bh.bptrack.data.entity.BloodPressureRecord
 import com.bh.bptrack.ui.component.BloodPressureRecordItem
+import com.bh.bptrack.ui.component.BloodPressureRecordItemCompact
 import com.bh.bptrack.ui.component.AddRecordDialog
 import com.bh.bptrack.ui.intent.BloodPressureIntent
 import com.bh.bptrack.ui.state.BloodPressureState
+import com.bh.bptrack.ui.state.ViewMode
 import com.bh.bptrack.ui.theme.BPTrackAndroidTheme
 import com.bh.bptrack.ui.viewmodel.BloodPressureViewModel
 import com.bh.bptrack.ui.viewmodel.BloodPressureViewModelFactory
@@ -55,7 +57,8 @@ fun BloodPressureScreen(
         onClearMessage = { viewModel.handleIntent(BloodPressureIntent.ClearMessage) },
         onExportCsv = { viewModel.handleIntent(BloodPressureIntent.ExportToCsv) },
         onImportCsv = { viewModel.handleIntent(BloodPressureIntent.ImportFromCsv) },
-        onProcessCsvImport = { csvContent -> viewModel.handleIntent(BloodPressureIntent.ProcessCsvImport(csvContent)) }
+        onProcessCsvImport = { csvContent -> viewModel.handleIntent(BloodPressureIntent.ProcessCsvImport(csvContent)) },
+        onToggleViewMode = { viewMode -> viewModel.handleIntent(BloodPressureIntent.ToggleViewMode(viewMode)) }
     )
 }
 
@@ -76,7 +79,8 @@ fun BloodPressureScreenContent(
     onClearMessage: () -> Unit,
     onExportCsv: () -> Unit = {},
     onImportCsv: () -> Unit = {},
-@Suppress("UNUSED_PARAMETER") onProcessCsvImport: (String) -> Unit = {}
+@Suppress("UNUSED_PARAMETER") onProcessCsvImport: (String) -> Unit = {},
+    onToggleViewMode: (ViewMode) -> Unit = {}
 ) {
     var showMenuDropdown by remember { mutableStateOf(false) }
     
@@ -85,6 +89,20 @@ fun BloodPressureScreenContent(
             TopAppBar(
                 title = { Text(stringResource(R.string.blood_pressure_records)) },
                 actions = {
+                    // 檢視模式切換按鈕
+                    IconButton(
+                        onClick = {
+                            onToggleViewMode(
+                                if (state.viewMode == ViewMode.DETAILED) ViewMode.COMPACT else ViewMode.DETAILED
+                            )
+                        }
+                    ) {
+                        Text(
+                            text = if (state.viewMode == ViewMode.DETAILED) "📋" else "📄",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                    
                     // 匯入匯出選單
                     Box {
                         IconButton(onClick = { showMenuDropdown = true }) {
@@ -157,15 +175,28 @@ fun BloodPressureScreenContent(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(
+                        if (state.viewMode == ViewMode.COMPACT) 4.dp else 8.dp
+                    )
                 ) {
                     itemsIndexed(state.records) { index, record ->
-                        BloodPressureRecordItem(
-                            record = record,
-                            previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
-                            onEdit = { onEditRecord(record) },
-                            onDelete = { onDeleteRecord(record) }
-                        )
+                        when (state.viewMode) {
+                            ViewMode.COMPACT -> {
+                                BloodPressureRecordItemCompact(
+                                    record = record,
+                                    onEdit = { onEditRecord(record) },
+                                    onDelete = { onDeleteRecord(record) }
+                                )
+                            }
+                            ViewMode.DETAILED -> {
+                                BloodPressureRecordItem(
+                                    record = record,
+                                    previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
+                                    onEdit = { onEditRecord(record) },
+                                    onDelete = { onDeleteRecord(record) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -217,7 +248,8 @@ fun BloodPressureScreenEmptyPreview() {
             onClearMessage = {},
             onExportCsv = {},
             onImportCsv = {},
-            onProcessCsvImport = {}
+            onProcessCsvImport = {},
+            onToggleViewMode = {}
         )
     }
 }
@@ -244,7 +276,8 @@ fun BloodPressureScreenLoadingPreview() {
             onClearMessage = {},
             onExportCsv = {},
             onImportCsv = {},
-            onProcessCsvImport = {}
+            onProcessCsvImport = {},
+            onToggleViewMode = {}
         )
     }
 }
@@ -296,7 +329,8 @@ fun BloodPressureScreenWithRecordsPreview() {
             onClearMessage = {},
             onExportCsv = {},
             onImportCsv = {},
-            onProcessCsvImport = {}
+            onProcessCsvImport = {},
+            onToggleViewMode = {}
         )
     }
 }
@@ -335,7 +369,11 @@ fun BloodPressureScreenWithDialogPreview() {
             onHeartRateChange = {},
             onNotesChange = {},
             onDateTimeChange = {},
-            onClearMessage = {}
+            onClearMessage = {},
+            onExportCsv = {},
+            onImportCsv = {},
+            onProcessCsvImport = {},
+            onToggleViewMode = {}
         )
     }
 } 

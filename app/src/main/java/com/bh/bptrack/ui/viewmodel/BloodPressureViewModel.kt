@@ -41,6 +41,7 @@ class BloodPressureViewModel(
             is BloodPressureIntent.UpdateHeartRate -> updateHeartRate(intent.value)
             is BloodPressureIntent.UpdateNotes -> updateNotes(intent.value)
             is BloodPressureIntent.UpdateDateTime -> updateDateTime(intent.dateTime)
+            is BloodPressureIntent.ToggleViewMode -> toggleViewMode(intent.viewMode)
         }
     }
 
@@ -261,5 +262,9 @@ class BloodPressureViewModel(
                 )
             }
         }
+    }
+    
+    private fun toggleViewMode(viewMode: com.bh.bptrack.ui.state.ViewMode) {
+        _state.value = _state.value.copy(viewMode = viewMode)
     }
 } 

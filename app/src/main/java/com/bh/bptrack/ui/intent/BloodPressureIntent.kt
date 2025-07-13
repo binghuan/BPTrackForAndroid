@@ -1,6 +1,7 @@
 package com.bh.bptrack.ui.intent
 
 import com.bh.bptrack.data.entity.BloodPressureRecord
+import com.bh.bptrack.ui.state.ViewMode
 import java.time.LocalDateTime
 
 sealed class BloodPressureIntent {
@@ -25,4 +26,7 @@ sealed class BloodPressureIntent {
     data class UpdateHeartRate(val value: String) : BloodPressureIntent()
     data class UpdateNotes(val value: String) : BloodPressureIntent()
     data class UpdateDateTime(val dateTime: LocalDateTime) : BloodPressureIntent()
+    
+    // 檢視模式切換
+    data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
 } 
