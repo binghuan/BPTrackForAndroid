@@ -25,15 +25,15 @@ import java.time.format.DateTimeFormatter
 
 // 血壓分類枚舉
 enum class BPCategory(
-    val displayName: String,
+    val nameRes: Int,
     val color: Color,
-    val description: String
+    val descriptionRes: Int
 ) {
-    NORMAL("正常", Color(0xFF4CAF50), "收縮壓 < 120 且 舒張壓 < 80"),
-    ELEVATED("血壓升高", Color(0xFFFF9800), "收縮壓 120-129 且 舒張壓 < 80"),
-    HIGH_STAGE_1("高血壓1期", Color(0xFFFF5722), "收縮壓 130-139 或 舒張壓 80-89"),
-    HIGH_STAGE_2("高血壓2期", Color(0xFFD32F2F), "收縮壓 140-179 或 舒張壓 90-119"),
-    HYPERTENSIVE_CRISIS("高血壓危象", Color(0xFF880E4F), "收縮壓 ≥ 180 或 舒張壓 ≥ 120")
+    NORMAL(R.string.bp_category_normal, Color(0xFF4CAF50), R.string.bp_category_normal_desc),
+    ELEVATED(R.string.bp_category_elevated, Color(0xFFFF9800), R.string.bp_category_elevated_desc),
+    HIGH_STAGE_1(R.string.bp_category_high_stage_1, Color(0xFFFF5722), R.string.bp_category_high_stage_1_desc),
+    HIGH_STAGE_2(R.string.bp_category_high_stage_2, Color(0xFFD32F2F), R.string.bp_category_high_stage_2_desc),
+    HYPERTENSIVE_CRISIS(R.string.bp_category_hypertensive_crisis, Color(0xFF880E4F), R.string.bp_category_hypertensive_crisis_desc)
 }
 
 // 計算血壓分類
@@ -127,12 +127,12 @@ fun BloodPressureRecordItem(
                                 ) {
                                     Icon(
                                         Icons.Default.KeyboardArrowUp,
-                                        contentDescription = "上升",
+                                        contentDescription = stringResource(R.string.trend_increased),
                                         tint = Color.Red,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "上升",
+                                        text = stringResource(R.string.trend_increased),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Red
                                     )
@@ -145,12 +145,12 @@ fun BloodPressureRecordItem(
                                 ) {
                                     Icon(
                                         Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "下降",
+                                        contentDescription = stringResource(R.string.trend_decreased),
                                         tint = Color.Green,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "下降",
+                                        text = stringResource(R.string.trend_decreased),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Green
                                     )
@@ -159,7 +159,7 @@ fun BloodPressureRecordItem(
                             BloodPressureTrend.STABLE -> {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "穩定",
+                                    text = stringResource(R.string.trend_stable),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -185,7 +185,7 @@ fun BloodPressureRecordItem(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = bpCategory.displayName,
+                            text = stringResource(bpCategory.nameRes),
                             style = MaterialTheme.typography.bodySmall,
                             color = bpCategory.color,
                             fontWeight = FontWeight.Medium
@@ -254,7 +254,7 @@ fun BloodPressureRecordItem(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(stringResource(R.string.delete)) },
-            text = { Text("確定要刪除此記錄嗎？") },
+            text = { Text(stringResource(R.string.confirm_delete_record)) },
             confirmButton = {
                 TextButton(
                     onClick = {

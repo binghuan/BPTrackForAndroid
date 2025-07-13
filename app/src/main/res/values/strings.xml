@@ -2,6 +2,7 @@
     <string name="app_name">血壓記錄</string>
     <string name="blood_pressure_records">血壓記錄</string>
     <string name="add_record">新增記錄</string>
+    <string name="edit_record">編輯記錄</string>
     <string name="systolic">收縮壓</string>
     <string name="diastolic">舒張壓</string>
     <string name="heart_rate">心率</string>
@@ -17,5 +18,28 @@
     <string name="bpm">bpm</string>
     <string name="invalid_input">輸入無效</string>
     <string name="record_saved">記錄已儲存</string>
+    <string name="record_updated">記錄已更新</string>
     <string name="record_deleted">記錄已刪除</string>
+    <string name="confirm_delete_record">確定要刪除此記錄嗎？</string>
+    <string name="please_enter_valid_bp_values">請輸入有效的血壓值</string>
+    
+    <!-- 血壓分類 -->
+    <string name="bp_category_normal">正常</string>
+    <string name="bp_category_elevated">血壓升高</string>
+    <string name="bp_category_high_stage_1">高血壓1期</string>
+    <string name="bp_category_high_stage_2">高血壓2期</string>
+    <string name="bp_category_hypertensive_crisis">高血壓危象</string>
+    <string name="bp_category_invalid">輸入無效</string>
+    
+    <!-- 血壓分類描述 -->
+    <string name="bp_category_normal_desc">收縮壓 &lt; 120 且 舒張壓 &lt; 80</string>
+    <string name="bp_category_elevated_desc">收縮壓 120-129 且 舒張壓 &lt; 80</string>
+    <string name="bp_category_high_stage_1_desc">收縮壓 130-139 或 舒張壓 80-89</string>
+    <string name="bp_category_high_stage_2_desc">收縮壓 140-179 或 舒張壓 90-119</string>
+    <string name="bp_category_hypertensive_crisis_desc">收縮壓 ≥ 180 或 舒張壓 ≥ 120</string>
+    
+    <!-- 血壓趨勢 -->
+    <string name="trend_increased">上升</string>
+    <string name="trend_decreased">下降</string>
+    <string name="trend_stable">穩定</string>
 </resources> 

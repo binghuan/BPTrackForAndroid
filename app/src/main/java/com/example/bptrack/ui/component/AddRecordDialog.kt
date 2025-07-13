@@ -26,16 +26,16 @@ import java.time.format.DateTimeFormatter
 
 // 血壓分類枚舉
 enum class BloodPressureCategory(
-    val displayName: String,
+    val nameRes: Int,
     val color: Color,
-    val description: String
+    val descriptionRes: Int
 ) {
-    NORMAL("正常", Color(0xFF4CAF50), "收縮壓 < 120 且 舒張壓 < 80"),
-    ELEVATED("血壓升高", Color(0xFFFF9800), "收縮壓 120-129 且 舒張壓 < 80"),
-    HIGH_STAGE_1("高血壓1期", Color(0xFFFF5722), "收縮壓 130-139 或 舒張壓 80-89"),
-    HIGH_STAGE_2("高血壓2期", Color(0xFFD32F2F), "收縮壓 140-179 或 舒張壓 90-119"),
-    HYPERTENSIVE_CRISIS("高血壓危象", Color(0xFF880E4F), "收縮壓 ≥ 180 或 舒張壓 ≥ 120"),
-    INVALID("輸入無效", Color.Gray, "請輸入有效的血壓值")
+    NORMAL(R.string.bp_category_normal, Color(0xFF4CAF50), R.string.bp_category_normal_desc),
+    ELEVATED(R.string.bp_category_elevated, Color(0xFFFF9800), R.string.bp_category_elevated_desc),
+    HIGH_STAGE_1(R.string.bp_category_high_stage_1, Color(0xFFFF5722), R.string.bp_category_high_stage_1_desc),
+    HIGH_STAGE_2(R.string.bp_category_high_stage_2, Color(0xFFD32F2F), R.string.bp_category_high_stage_2_desc),
+    HYPERTENSIVE_CRISIS(R.string.bp_category_hypertensive_crisis, Color(0xFF880E4F), R.string.bp_category_hypertensive_crisis_desc),
+    INVALID(R.string.bp_category_invalid, Color.Gray, R.string.please_enter_valid_bp_values)
 }
 
 // 計算血壓分類
@@ -91,7 +91,7 @@ fun AddRecordDialog(
             ) {
                 // 標題
                 Text(
-                    text = if (state.editingRecord != null) "編輯記錄" else stringResource(R.string.add_record),
+                    text = if (state.editingRecord != null) stringResource(R.string.edit_record) else stringResource(R.string.add_record),
                     style = MaterialTheme.typography.headlineSmall
                 )
 
@@ -154,13 +154,13 @@ fun AddRecordDialog(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = currentCategory.displayName,
+                                    text = stringResource(currentCategory.nameRes),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = currentCategory.color
                                 )
                                 Text(
-                                    text = currentCategory.description,
+                                    text = stringResource(currentCategory.descriptionRes),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

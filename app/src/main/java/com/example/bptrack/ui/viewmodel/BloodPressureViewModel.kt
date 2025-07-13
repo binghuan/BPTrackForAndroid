@@ -117,7 +117,7 @@ class BloodPressureViewModel(
         viewModelScope.launch {
             try {
                 repository.deleteRecord(record)
-                _state.value = _state.value.copy(message = "記錄已刪除")
+                _state.value = _state.value.copy(message = "Record deleted")
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message)
             }
@@ -131,7 +131,7 @@ class BloodPressureViewModel(
         val heartRate = currentState.heartRateInput.toIntOrNull()
 
         if (systolic == null || diastolic == null) {
-            _state.value = currentState.copy(error = "請輸入有效的血壓值")
+            _state.value = currentState.copy(error = "Please enter valid blood pressure values")
             return
         }
 
@@ -150,13 +150,13 @@ class BloodPressureViewModel(
                     repository.updateRecord(record)
                     _state.value = currentState.copy(
                         isAddDialogVisible = false,
-                        message = "記錄已更新"
+                        message = "Record updated"
                     )
                 } else {
                     repository.insertRecord(record)
                     _state.value = currentState.copy(
                         isAddDialogVisible = false,
-                        message = "記錄已儲存"
+                        message = "Record saved"
                     )
                 }
             } catch (e: Exception) {
