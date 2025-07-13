@@ -18,12 +18,11 @@ class BloodPressureViewModel(
     val state: StateFlow<BloodPressureState> = _state.asStateFlow()
 
     init {
-        handleIntent(BloodPressureIntent.LoadRecords)
+        loadRecords()
     }
 
     fun handleIntent(intent: BloodPressureIntent) {
         when (intent) {
-            is BloodPressureIntent.LoadRecords -> loadRecords()
             is BloodPressureIntent.ShowAddDialog -> showAddDialog()
             is BloodPressureIntent.HideAddDialog -> hideAddDialog()
             is BloodPressureIntent.ShowDatePicker -> showDatePicker()
@@ -32,6 +31,9 @@ class BloodPressureViewModel(
             is BloodPressureIntent.HideTimePicker -> hideTimePicker()
             is BloodPressureIntent.SaveRecord -> saveRecord()
             is BloodPressureIntent.ClearMessage -> clearMessage()
+            is BloodPressureIntent.ExportToCsv -> exportToCsv()
+            is BloodPressureIntent.ImportFromCsv -> importFromCsv()
+            is BloodPressureIntent.ProcessCsvImport -> processCsvImport(intent.csvContent)
             is BloodPressureIntent.EditRecord -> editRecord(intent.record)
             is BloodPressureIntent.DeleteRecord -> deleteRecord(intent.record)
             is BloodPressureIntent.UpdateSystolic -> updateSystolic(intent.value)
@@ -186,6 +188,78 @@ class BloodPressureViewModel(
     }
 
     private fun clearMessage() {
-        _state.value = _state.value.copy(message = null, error = null)
+        _state.value = _state.value.copy(message = null, error = null, csvExportData = null, importProgress = null)
+    }
+    
+    // CSV 匯出功能
+    private fun exportToCsv() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isExporting = true, error = null)
+            
+            try {
+                val result = repository.exportToCsv()
+                if (result.isSuccess) {
+                    _state.value = _state.value.copy(
+                        isExporting = false,
+                        csvExportData = result.getOrNull(),
+                        message = "資料匯出成功"
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        isExporting = false,
+                        error = result.exceptionOrNull()?.message ?: "匯出失敗"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isExporting = false,
+                    error = "匯出過程中發生錯誤: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    // 開始 CSV 匯入流程 (觸發文件選擇)
+    private fun importFromCsv() {
+        _state.value = _state.value.copy(
+            isImporting = true,
+            error = null,
+            importProgress = "請選擇 CSV 檔案..."
+        )
+    }
+    
+    // 處理 CSV 匯入內容
+    private fun processCsvImport(csvContent: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(
+                isImporting = true,
+                importProgress = "正在處理 CSV 資料..."
+            )
+            
+            try {
+                val result = repository.importFromCsv(csvContent)
+                if (result.isSuccess) {
+                    val importedCount = result.getOrNull() ?: 0
+                    _state.value = _state.value.copy(
+                        isImporting = false,
+                        importProgress = null,
+                        message = "成功匯入 $importedCount 筆記錄"
+                    )
+                    // Room Flow 會自動更新記錄列表
+                } else {
+                    _state.value = _state.value.copy(
+                        isImporting = false,
+                        importProgress = null,
+                        error = result.exceptionOrNull()?.message ?: "匯入失敗"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isImporting = false,
+                    importProgress = null,
+                    error = "匯入過程中發生錯誤: ${e.message}"
+                )
+            }
+        }
     }
 } 

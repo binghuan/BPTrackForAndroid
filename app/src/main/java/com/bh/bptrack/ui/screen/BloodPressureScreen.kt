@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,7 +52,10 @@ fun BloodPressureScreen(
         onHeartRateChange = { viewModel.handleIntent(BloodPressureIntent.UpdateHeartRate(it)) },
         onNotesChange = { viewModel.handleIntent(BloodPressureIntent.UpdateNotes(it)) },
         onDateTimeChange = { viewModel.handleIntent(BloodPressureIntent.UpdateDateTime(it)) },
-        onClearMessage = { viewModel.handleIntent(BloodPressureIntent.ClearMessage) }
+        onClearMessage = { viewModel.handleIntent(BloodPressureIntent.ClearMessage) },
+        onExportCsv = { viewModel.handleIntent(BloodPressureIntent.ExportToCsv) },
+        onImportCsv = { viewModel.handleIntent(BloodPressureIntent.ImportFromCsv) },
+        onProcessCsvImport = { csvContent -> viewModel.handleIntent(BloodPressureIntent.ProcessCsvImport(csvContent)) }
     )
 }
 
@@ -69,12 +73,54 @@ fun BloodPressureScreenContent(
     onHeartRateChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
     onDateTimeChange: (LocalDateTime) -> Unit,
-    onClearMessage: () -> Unit
+    onClearMessage: () -> Unit,
+    onExportCsv: () -> Unit = {},
+    onImportCsv: () -> Unit = {},
+@Suppress("UNUSED_PARAMETER") onProcessCsvImport: (String) -> Unit = {}
 ) {
+    var showMenuDropdown by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.blood_pressure_records)) }
+                title = { Text(stringResource(R.string.blood_pressure_records)) },
+                actions = {
+                    // 匯入匯出選單
+                    Box {
+                        IconButton(onClick = { showMenuDropdown = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "選單")
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMenuDropdown,
+                            onDismissRequest = { showMenuDropdown = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.share_csv)) },
+                                onClick = {
+                                    showMenuDropdown = false
+                                    onExportCsv()
+                                },
+                                leadingIcon = {
+                                    Text("📤", style = MaterialTheme.typography.titleMedium)
+                                },
+                                enabled = !state.isExporting && state.records.isNotEmpty()
+                            )
+                            
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.import_csv)) },
+                                onClick = {
+                                    showMenuDropdown = false
+                                    onImportCsv()
+                                },
+                                leadingIcon = {
+                                    Text("📥", style = MaterialTheme.typography.titleMedium)
+                                },
+                                enabled = !state.isImporting
+                            )
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -168,7 +214,10 @@ fun BloodPressureScreenEmptyPreview() {
             onHeartRateChange = {},
             onNotesChange = {},
             onDateTimeChange = {},
-            onClearMessage = {}
+            onClearMessage = {},
+            onExportCsv = {},
+            onImportCsv = {},
+            onProcessCsvImport = {}
         )
     }
 }
@@ -192,7 +241,10 @@ fun BloodPressureScreenLoadingPreview() {
             onHeartRateChange = {},
             onNotesChange = {},
             onDateTimeChange = {},
-            onClearMessage = {}
+            onClearMessage = {},
+            onExportCsv = {},
+            onImportCsv = {},
+            onProcessCsvImport = {}
         )
     }
 }
@@ -241,7 +293,10 @@ fun BloodPressureScreenWithRecordsPreview() {
             onHeartRateChange = {},
             onNotesChange = {},
             onDateTimeChange = {},
-            onClearMessage = {}
+            onClearMessage = {},
+            onExportCsv = {},
+            onImportCsv = {},
+            onProcessCsvImport = {}
         )
     }
 }

@@ -15,5 +15,11 @@ data class BloodPressureState(
     val selectedDateTime: java.time.LocalDateTime = java.time.LocalDateTime.now(),
     val isDatePickerVisible: Boolean = false,
     val isTimePickerVisible: Boolean = false,
-    val message: String? = null
+    val message: String? = null,
+    
+    // CSV 匯入匯出狀態
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false,
+    val csvExportData: String? = null,
+    val importProgress: String? = null
 ) 

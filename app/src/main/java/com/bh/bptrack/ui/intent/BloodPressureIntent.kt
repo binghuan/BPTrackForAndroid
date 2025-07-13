@@ -4,7 +4,6 @@ import com.bh.bptrack.data.entity.BloodPressureRecord
 import java.time.LocalDateTime
 
 sealed class BloodPressureIntent {
-    object LoadRecords : BloodPressureIntent()
     object ShowAddDialog : BloodPressureIntent()
     object HideAddDialog : BloodPressureIntent()
     object ShowDatePicker : BloodPressureIntent()
@@ -13,6 +12,11 @@ sealed class BloodPressureIntent {
     object HideTimePicker : BloodPressureIntent()
     object SaveRecord : BloodPressureIntent()
     object ClearMessage : BloodPressureIntent()
+    
+    // CSV 匯入匯出
+    object ExportToCsv : BloodPressureIntent()
+    object ImportFromCsv : BloodPressureIntent()
+    data class ProcessCsvImport(val csvContent: String) : BloodPressureIntent()
     
     data class EditRecord(val record: BloodPressureRecord) : BloodPressureIntent()
     data class DeleteRecord(val record: BloodPressureRecord) : BloodPressureIntent()

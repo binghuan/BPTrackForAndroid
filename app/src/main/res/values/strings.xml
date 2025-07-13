@@ -43,4 +43,18 @@
     <string name="trend_increased">上升</string>
     <string name="trend_decreased">下降</string>
     <string name="trend_stable">穩定</string>
+    
+    <!-- CSV 匯入匯出 -->
+    <string name="share_csv">分享 CSV</string>
+    <string name="import_csv">匯入 CSV</string>
+    <string name="export_success">匯出成功</string>
+    <string name="import_success">匯入成功</string>
+    <string name="export_failed">匯出失敗</string>
+    <string name="import_failed">匯入失敗</string>
+    <string name="csv_file_format_error">CSV 檔案格式錯誤</string>
+    <string name="no_data_to_export">沒有資料可以匯出</string>
+    <string name="select_csv_file">選擇 CSV 檔案</string>
+    <string name="save_csv_file">儲存 CSV 檔案</string>
+    <string name="processing_csv">正在處理 CSV...</string>
+    <string name="imported_records_count">成功匯入 %d 筆記錄</string>
 </resources> 
