@@ -1,6 +1,8 @@
 package com.example.bptrack.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -8,16 +10,49 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.bptrack.R
+import com.example.bptrack.data.entity.BloodPressureRecord
 import com.example.bptrack.ui.state.BloodPressureState
 import com.example.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+// 血壓分類枚舉
+enum class BloodPressureCategory(
+    val displayName: String,
+    val color: Color,
+    val description: String
+) {
+    NORMAL("正常", Color(0xFF4CAF50), "收縮壓 < 120 且 舒張壓 < 80"),
+    ELEVATED("血壓升高", Color(0xFFFF9800), "收縮壓 120-129 且 舒張壓 < 80"),
+    HIGH_STAGE_1("高血壓1期", Color(0xFFFF5722), "收縮壓 130-139 或 舒張壓 80-89"),
+    HIGH_STAGE_2("高血壓2期", Color(0xFFD32F2F), "收縮壓 140-179 或 舒張壓 90-119"),
+    HYPERTENSIVE_CRISIS("高血壓危象", Color(0xFF880E4F), "收縮壓 ≥ 180 或 舒張壓 ≥ 120"),
+    INVALID("輸入無效", Color.Gray, "請輸入有效的血壓值")
+}
+
+// 計算血壓分類
+fun calculateBloodPressureCategory(systolic: Int?, diastolic: Int?): BloodPressureCategory {
+    if (systolic == null || diastolic == null || systolic <= 0 || diastolic <= 0) {
+        return BloodPressureCategory.INVALID
+    }
+    
+    return when {
+        systolic >= 180 || diastolic >= 120 -> BloodPressureCategory.HYPERTENSIVE_CRISIS
+        systolic >= 140 || diastolic >= 90 -> BloodPressureCategory.HIGH_STAGE_2
+        systolic >= 130 || diastolic >= 80 -> BloodPressureCategory.HIGH_STAGE_1
+        systolic >= 120 && diastolic < 80 -> BloodPressureCategory.ELEVATED
+        systolic < 120 && diastolic < 80 -> BloodPressureCategory.NORMAL
+        else -> BloodPressureCategory.HIGH_STAGE_1
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,12 +66,22 @@ fun AddRecordDialog(
     onNotesChange: (String) -> Unit,
     onDateTimeChange: (LocalDateTime) -> Unit
 ) {
+    // 計算當前血壓分類
+    val systolicValue = state.systolicInput.toIntOrNull()
+    val diastolicValue = state.diastolicInput.toIntOrNull()
+    val currentCategory = calculateBloodPressureCategory(systolicValue, diastolicValue)
+    
+    // 判斷輸入是否有效
+    val isSystolicValid = systolicValue != null && systolicValue > 0
+    val isDiastolicValid = diastolicValue != null && diastolicValue > 0
+    val showCategory = isSystolicValid && isDiastolicValid
+
     Dialog(onDismissRequest = onCancel) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -57,7 +102,14 @@ fun AddRecordDialog(
                     label = { Text(stringResource(R.string.systolic)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = { Text("mmHg") }
+                    trailingIcon = { Text("mmHg") },
+                    isError = state.systolicInput.isNotEmpty() && !isSystolicValid,
+                    colors = if (showCategory) {
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = currentCategory.color,
+                            unfocusedBorderColor = currentCategory.color.copy(alpha = 0.6f)
+                        )
+                    } else OutlinedTextFieldDefaults.colors()
                 )
 
                 // 舒張壓
@@ -67,8 +119,55 @@ fun AddRecordDialog(
                     label = { Text(stringResource(R.string.diastolic)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = { Text("mmHg") }
+                    trailingIcon = { Text("mmHg") },
+                    isError = state.diastolicInput.isNotEmpty() && !isDiastolicValid,
+                    colors = if (showCategory) {
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = currentCategory.color,
+                            unfocusedBorderColor = currentCategory.color.copy(alpha = 0.6f)
+                        )
+                    } else OutlinedTextFieldDefaults.colors()
                 )
+
+                // 血壓分類提示
+                if (showCategory && currentCategory != BloodPressureCategory.INVALID) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = currentCategory.color.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(
+                                        currentCategory.color,
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = currentCategory.displayName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = currentCategory.color
+                                )
+                                Text(
+                                    text = currentCategory.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // 心率
                 OutlinedTextField(
@@ -126,7 +225,10 @@ fun AddRecordDialog(
                         Text(stringResource(R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = onSave) {
+                    Button(
+                        onClick = onSave,
+                        enabled = isSystolicValid && isDiastolicValid
+                    ) {
                         Text(stringResource(R.string.save))
                     }
                 }
@@ -135,18 +237,18 @@ fun AddRecordDialog(
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun AddRecordDialogPreview() {
     BPTrackAndroidTheme {
         AddRecordDialog(
             state = BloodPressureState(
+                isAddDialogVisible = true,
                 systolicInput = "120",
                 diastolicInput = "80",
                 heartRateInput = "75",
                 notesInput = "早晨測量",
-                selectedDateTime = LocalDateTime.now(),
-                isAddDialogVisible = true
+                selectedDateTime = LocalDateTime.now()
             ),
             onSave = {},
             onCancel = {},
@@ -159,18 +261,42 @@ fun AddRecordDialogPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview
+@Composable
+fun AddRecordDialogHighBPPreview() {
+    BPTrackAndroidTheme {
+        AddRecordDialog(
+            state = BloodPressureState(
+                isAddDialogVisible = true,
+                systolicInput = "150",
+                diastolicInput = "95",
+                heartRateInput = "85",
+                notesInput = "運動後測量",
+                selectedDateTime = LocalDateTime.now()
+            ),
+            onSave = {},
+            onCancel = {},
+            onSystolicChange = {},
+            onDiastolicChange = {},
+            onHeartRateChange = {},
+            onNotesChange = {},
+            onDateTimeChange = {}
+        )
+    }
+}
+
+@Preview
 @Composable
 fun AddRecordDialogEmptyPreview() {
     BPTrackAndroidTheme {
         AddRecordDialog(
             state = BloodPressureState(
+                isAddDialogVisible = true,
                 systolicInput = "",
                 diastolicInput = "",
                 heartRateInput = "",
                 notesInput = "",
-                selectedDateTime = LocalDateTime.now(),
-                isAddDialogVisible = true
+                selectedDateTime = LocalDateTime.now()
             ),
             onSave = {},
             onCancel = {},

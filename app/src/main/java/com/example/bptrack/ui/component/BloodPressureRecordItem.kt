@@ -1,6 +1,8 @@
 package com.example.bptrack.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -20,6 +22,31 @@ import com.example.bptrack.data.entity.BloodPressureRecord
 import com.example.bptrack.ui.theme.BPTrackAndroidTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+// 血壓分類枚舉
+enum class BPCategory(
+    val displayName: String,
+    val color: Color,
+    val description: String
+) {
+    NORMAL("正常", Color(0xFF4CAF50), "收縮壓 < 120 且 舒張壓 < 80"),
+    ELEVATED("血壓升高", Color(0xFFFF9800), "收縮壓 120-129 且 舒張壓 < 80"),
+    HIGH_STAGE_1("高血壓1期", Color(0xFFFF5722), "收縮壓 130-139 或 舒張壓 80-89"),
+    HIGH_STAGE_2("高血壓2期", Color(0xFFD32F2F), "收縮壓 140-179 或 舒張壓 90-119"),
+    HYPERTENSIVE_CRISIS("高血壓危象", Color(0xFF880E4F), "收縮壓 ≥ 180 或 舒張壓 ≥ 120")
+}
+
+// 計算血壓分類
+fun calculateBPCategory(systolic: Int, diastolic: Int): BPCategory {
+    return when {
+        systolic >= 180 || diastolic >= 120 -> BPCategory.HYPERTENSIVE_CRISIS
+        systolic >= 140 || diastolic >= 90 -> BPCategory.HIGH_STAGE_2
+        systolic >= 130 || diastolic >= 80 -> BPCategory.HIGH_STAGE_1
+        systolic >= 120 && diastolic < 80 -> BPCategory.ELEVATED
+        systolic < 120 && diastolic < 80 -> BPCategory.NORMAL
+        else -> BPCategory.HIGH_STAGE_1
+    }
+}
 
 // 血壓趨勢枚舉
 enum class BloodPressureTrend {
@@ -56,6 +83,7 @@ fun BloodPressureRecordItem(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val trend = calculateBloodPressureTrend(record, previousRecord)
+    val bpCategory = calculateBPCategory(record.systolic, record.diastolic)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -140,6 +168,28 @@ fun BloodPressureRecordItem(
                                 // 首次記錄不顯示趨勢
                             }
                         }
+                    }
+                    
+                    // 血壓分類標籤
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(
+                                    bpCategory.color,
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = bpCategory.displayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = bpCategory.color,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
 
                     // 心率
