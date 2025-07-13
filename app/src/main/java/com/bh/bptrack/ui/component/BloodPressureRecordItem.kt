@@ -97,12 +97,14 @@ fun getBPCategoryTextColor(
 @Composable
 fun BloodPressureRecordItemCompact(
     record: BloodPressureRecord,
+    previousRecord: BloodPressureRecord? = null,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     val bpCategory = calculateBPCategory(record.systolic, record.diastolic)
+    val trend = calculateBloodPressureTrend(record, previousRecord)
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -123,17 +125,55 @@ fun BloodPressureRecordItemCompact(
                 overflow = TextOverflow.Ellipsis
             )
             
-            // 中間：血壓值 (weight = 1)
-            Text(
-                text = "${record.systolic}/${record.diastolic}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = getBPCategoryTextColor(bpCategory),
-                maxLines = 1,
+            // 中間：血壓值和趨勢 (weight = 1, 文字靠右)
+            Row(
                 modifier = Modifier
                     .weight(1f)
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-            )
+                    .wrapContentWidth(Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "${record.systolic}/${record.diastolic}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = getBPCategoryTextColor(bpCategory),
+                    maxLines = 1
+                )
+                
+                // 趨勢指示器
+                when (trend) {
+                    BloodPressureTrend.INCREASED -> {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.KeyboardArrowUp,
+                            contentDescription = "上升",
+                            tint = Color.Red,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    BloodPressureTrend.DECREASED -> {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = "下降",
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    BloodPressureTrend.STABLE -> {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "→",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    BloodPressureTrend.FIRST_RECORD -> {
+                        // 首次記錄不顯示趨勢
+                    }
+                }
+            }
             
             // 右側：脈搏和選單
             Row(

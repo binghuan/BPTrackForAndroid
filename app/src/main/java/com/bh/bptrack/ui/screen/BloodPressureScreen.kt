@@ -184,6 +184,7 @@ fun BloodPressureScreenContent(
                             ViewMode.COMPACT -> {
                                 BloodPressureRecordItemCompact(
                                     record = record,
+                                    previousRecord = if (index < state.records.size - 1) state.records[index + 1] else null,
                                     onEdit = { onEditRecord(record) },
                                     onDelete = { onDeleteRecord(record) }
                                 )
