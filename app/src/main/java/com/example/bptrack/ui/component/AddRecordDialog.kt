@@ -2,10 +2,11 @@ package com.example.bptrack.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,12 +81,14 @@ fun AddRecordDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.9f)
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -189,11 +192,6 @@ fun AddRecordDialog(
                         onValueChange = { },
                         label = { Text(stringResource(R.string.date)) },
                         readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { /* 日期選擇器 */ }) {
-                                Icon(Icons.Default.DateRange, contentDescription = null)
-                            }
-                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -218,7 +216,9 @@ fun AddRecordDialog(
 
                 // 按鈕
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onCancel) {
