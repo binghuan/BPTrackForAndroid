@@ -9,11 +9,13 @@ This application adopts the **MVI (Model-View-Intent)** architecture pattern, co
 - **State Management**: Centralized state management, UI state consistency
 - **Testability**: Clear responsibilities for each layer, easy to unit test
 - **Maintainability**: Clear code structure, easy to extend and modify
+- **Theme Adaptation**: Supports Dark/Light mode with dynamic color switching
+- **Internationalization**: Complete bilingual support, easy to extend to other languages
 
 ## 📁 Project Structure
 
 ```
-app/src/main/java/com/example/bptrack/
+app/src/main/java/com/bh/bptrack/
 ├── MainActivity.kt                 # Application entry point
 ├── data/                          # Data layer
 │   ├── entity/                    # Data entities
@@ -314,6 +316,12 @@ sequenceDiagram
 - **Repository Pattern**: Data access abstraction
 - **Entity**: Data models
 
+### **UI & Theme**
+- **Material Design 3**: Modern UI design language
+- **Dark/Light Theme**: Theme adaptation system
+- **Dynamic Colors**: Dynamic color management
+- **Internationalization**: Internationalization support
+
 ### **Dependency Injection**
 - **Manual DI**: ViewModelFactory pattern
 
@@ -323,6 +331,7 @@ sequenceDiagram
 - Automatic analysis of blood pressure levels (normal, elevated, high stage 1, etc.)
 - Real-time color feedback prompts
 - Medical standard-compliant classification
+- Theme-adaptive color display
 
 ### 2. **Trend Analysis**
 - Automatic comparison with previous measurements
@@ -338,6 +347,8 @@ sequenceDiagram
 - Material Design 3 design language
 - Responsive layout design
 - Smooth animation effects
+- Dark/Light theme support
+- Dynamic color adaptation
 
 ## ⚡ Key Features Deep Dive
 
@@ -346,13 +357,13 @@ sequenceDiagram
 Blood pressure classification based on American Heart Association (AHA) standards:
 
 ```kotlin
-// BloodPressureCategory enum
-enum class BloodPressureCategory(
+// BPCategory enum
+enum class BPCategory(
     val nameRes: Int,
     val color: Color,
     val descriptionRes: Int
 ) {
-    NORMAL(R.string.bp_category_normal, Color(0xFF4CAF50), R.string.bp_category_normal_desc),
+    NORMAL(R.string.bp_category_normal, Color(0xFF2E7D32), R.string.bp_category_normal_desc),
     ELEVATED(R.string.bp_category_elevated, Color(0xFFFF9800), R.string.bp_category_elevated_desc),
     HIGH_STAGE_1(R.string.bp_category_high_stage_1, Color(0xFFFF5722), R.string.bp_category_high_stage_1_desc),
     HIGH_STAGE_2(R.string.bp_category_high_stage_2, Color(0xFFD32F2F), R.string.bp_category_high_stage_2_desc),
@@ -360,14 +371,14 @@ enum class BloodPressureCategory(
 }
 
 // Classification calculation logic
-fun calculateBloodPressureCategory(systolic: Int?, diastolic: Int?): BloodPressureCategory {
+fun calculateBPCategory(systolic: Int, diastolic: Int): BPCategory {
     return when {
-        systolic >= 180 || diastolic >= 120 -> BloodPressureCategory.HYPERTENSIVE_CRISIS
-        systolic >= 140 || diastolic >= 90 -> BloodPressureCategory.HIGH_STAGE_2
-        systolic >= 130 || diastolic >= 80 -> BloodPressureCategory.HIGH_STAGE_1
-        systolic >= 120 && diastolic < 80 -> BloodPressureCategory.ELEVATED
-        systolic < 120 && diastolic < 80 -> BloodPressureCategory.NORMAL
-        else -> BloodPressureCategory.HIGH_STAGE_1
+        systolic >= 180 || diastolic >= 120 -> BPCategory.HYPERTENSIVE_CRISIS
+        systolic >= 140 || diastolic >= 90 -> BPCategory.HIGH_STAGE_2
+        systolic >= 130 || diastolic >= 80 -> BPCategory.HIGH_STAGE_1
+        systolic >= 120 && diastolic < 80 -> BPCategory.ELEVATED
+        systolic < 120 && diastolic < 80 -> BPCategory.NORMAL
+        else -> BPCategory.HIGH_STAGE_1
     }
 }
 ```
@@ -392,7 +403,53 @@ fun calculateBloodPressureTrend(
 }
 ```
 
-### 3. **Error Handling Mechanism**
+### 3. **Theme Adaptation System**
+
+The application supports Dark/Light mode, ensuring good visual experience under different themes:
+
+```kotlin
+// Theme detection and color adaptation
+@Composable
+fun getBPCategoryTextColor(
+    category: BPCategory,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+): Color {
+    return when (category) {
+        BPCategory.NORMAL -> if (isDarkTheme) Color(0xFF66BB6A) else Color(0xFF1B5E20)
+        BPCategory.ELEVATED -> if (isDarkTheme) Color(0xFFFFB74D) else Color(0xFFE65100)
+        BPCategory.HIGH_STAGE_1 -> if (isDarkTheme) Color(0xFFFF8A65) else Color(0xFFBF360C)
+        BPCategory.HIGH_STAGE_2 -> if (isDarkTheme) Color(0xFFEF5350) else Color(0xFF8B0000)
+        BPCategory.HYPERTENSIVE_CRISIS -> if (isDarkTheme) Color(0xFFAD1457) else Color(0xFF4A0E4E)
+    }
+}
+
+// Usage in UI components
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = getBPCategoryTextColor(bpCategory),
+    style = MaterialTheme.typography.bodySmall
+)
+```
+
+**Theme Adaptation Principles:**
+- **Dark mode**: Use light colors for text to ensure clarity on dark backgrounds
+- **Light mode**: Use dark colors for text to provide good contrast
+- **Dynamic switching**: Automatically adjusts based on system theme, no manual switching required
+
+### 4. **Internationalization Support**
+
+The application supports Traditional Chinese and English bilingual:
+
+```kotlin
+// String resource organization
+res/values/strings.xml        # Chinese (default)
+res/values-en/strings.xml     # English
+
+// Usage
+stringResource(R.string.bp_category_normal)
+```
+
+### 5. **Error Handling Mechanism**
 
 ```kotlin
 // Unified error handling in ViewModel
@@ -445,6 +502,40 @@ Text(stringResource(R.string.blood_pressure_records))
 Text("Blood Pressure Records")
 ```
 
+### 4. **Theme Adaptation**
+```kotlin
+// ✅ Good practice: Use theme adaptation functions
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = getBPCategoryTextColor(bpCategory)
+)
+
+// ❌ Avoid: Hard-coded colors
+Text(
+    text = stringResource(bpCategory.nameRes),
+    color = Color.Red
+)
+```
+
+### 5. **Internationalization Support**
+```kotlin
+// ✅ Good practice: Use string resources for all text
+enum class BPCategory(
+    val nameRes: Int,
+    val descriptionRes: Int
+) {
+    NORMAL(R.string.bp_category_normal, R.string.bp_category_normal_desc)
+}
+
+// ❌ Avoid: Mixed use of hard-coded and resource strings
+enum class BPCategory(
+    val name: String,
+    val nameRes: Int
+) {
+    NORMAL("Normal", R.string.bp_category_normal)
+}
+```
+
 ## 🔄 Extension Guide
 
 ### Adding New Features
@@ -452,6 +543,34 @@ Text("Blood Pressure Records")
 2. **Update State**: Add necessary state in `BloodPressureState`
 3. **Implement Logic**: Handle new Intent in `ViewModel`
 4. **Update UI**: Respond to state changes in corresponding components
+
+### Extending Theme Adaptation
+To add theme adaptation support for new UI components:
+
+```kotlin
+// 1. Create theme adaptation function
+@Composable
+fun getCustomTextColor(
+    type: CustomType,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
+): Color {
+    return when (type) {
+        CustomType.PRIMARY -> if (isDarkTheme) Color.White else Color.Black
+        CustomType.SECONDARY -> if (isDarkTheme) Color.Gray else Color.DarkGray
+    }
+}
+
+// 2. Use in UI components
+Text(
+    text = "Custom Text",
+    color = getCustomTextColor(CustomType.PRIMARY)
+)
+```
+
+### Adding New Language Support
+1. **Create new string resource file**: `res/values-zh/strings.xml`
+2. **Translate all strings**: Ensure all strings have corresponding translations
+3. **Test language switching**: Test the application under different language environments
 
 ### Adding New Pages
 1. **Create Screen Component**: New Composable function
