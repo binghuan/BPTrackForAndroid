@@ -627,13 +627,9 @@ data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
 @Composable
 fun BloodPressureRecordItemCompact(
     record: BloodPressureRecord,
-    previousRecord: BloodPressureRecord? = null,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val bpCategory = calculateBPCategory(record.systolic, record.diastolic)
-    val trend = calculateBloodPressureTrend(record, previousRecord)
-    
     Card {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // 日期 (wrap content) - 顯示年月日
@@ -642,28 +638,12 @@ fun BloodPressureRecordItemCompact(
                 maxLines = 1
             )
             
-            // 血壓值和趨勢 (weight = 1, 文字靠右)
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .wrapContentWidth(Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "${record.systolic}/${record.diastolic}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = getBPCategoryTextColor(bpCategory)
-                )
-                
-                // 趨勢指示器
-                when (trend) {
-                    BloodPressureTrend.INCREASED -> Icon(Icons.Default.KeyboardArrowUp, tint = Color.Red)
-                    BloodPressureTrend.DECREASED -> Icon(Icons.Default.KeyboardArrowDown, tint = Color.Green)
-                    BloodPressureTrend.STABLE -> Text("→")
-                    BloodPressureTrend.FIRST_RECORD -> { /* 不顯示 */ }
-                }
-            }
+            // 血壓值 (weight = 1, 居中)
+            Text(
+                text = "${record.systolic}/${record.diastolic}",
+                modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.headlineSmall
+            )
             
             // 脈搏和選單
             Row {

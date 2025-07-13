@@ -627,13 +627,9 @@ data class ToggleViewMode(val viewMode: ViewMode) : BloodPressureIntent()
 @Composable
 fun BloodPressureRecordItemCompact(
     record: BloodPressureRecord,
-    previousRecord: BloodPressureRecord? = null,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val bpCategory = calculateBPCategory(record.systolic, record.diastolic)
-    val trend = calculateBloodPressureTrend(record, previousRecord)
-    
     Card {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Date (wrap content) - Display year/month/day
@@ -642,28 +638,12 @@ fun BloodPressureRecordItemCompact(
                 maxLines = 1
             )
             
-            // Blood pressure value and trend (weight = 1, text aligned right)
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .wrapContentWidth(Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "${record.systolic}/${record.diastolic}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = getBPCategoryTextColor(bpCategory)
-                )
-                
-                // Trend indicator
-                when (trend) {
-                    BloodPressureTrend.INCREASED -> Icon(Icons.Default.KeyboardArrowUp, tint = Color.Red)
-                    BloodPressureTrend.DECREASED -> Icon(Icons.Default.KeyboardArrowDown, tint = Color.Green)
-                    BloodPressureTrend.STABLE -> Text("→")
-                    BloodPressureTrend.FIRST_RECORD -> { /* No display */ }
-                }
-            }
+            // Blood pressure value (weight = 1, centered)
+            Text(
+                text = "${record.systolic}/${record.diastolic}",
+                modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.headlineSmall
+            )
             
             // Heart rate and menu
             Row {
